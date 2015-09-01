@@ -323,6 +323,32 @@ The following functions can be used as key functions with the
 
    .. versionadded:: 1.1
 
+These functions can also be helpful when implementing custom key
+functions for handling some non-hashable arguments.  For example,
+calling the following function with a `env` argument will raise a
+:class:`TypeError`, since :class:`dict` is not hashable::
+
+  @cached(LRUCache(maxsize=128)
+  def foo(x, y, z, env={}):
+      pass
+
+However, if `env` always holds only hashable values itself, a custom
+key function can be written that handles the `env` keyword argument
+specially.  Using Python 3, one could write::
+
+  def envkey(*args, env={}, **kwargs):
+      key = hashkey(*args, **kwargs)
+      key += tuple(env.items())
+      return key
+
+This can be used in the decorator declaration::
+
+  @cached(LRUCache(maxsize=128), key=envkey)
+
+Note that both :func:`hashkey` and :func:`typedkey` return
+:class:`tuple` instances.  Custom key fuctions can return any hashable
+type.
+
 
 :mod:`cachetools.func` --- :func:`functools.lru_cache` compatible decorators
 ============================================================================
